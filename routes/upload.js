@@ -60,12 +60,13 @@ router.get('/latest', async (req, res) => {
      res.status(500).json({ message: 'Server error' });
    }
  });
- 
+
  // Get all images (sorted newest first)
 router.get('/all', async (req, res) => {
   try {
     const images = await Image.find().sort({ timestamp: -1 });
     res.json(images);
+    console.log(images);
   } catch (error) {
     console.error('Error fetching all images:', error);
     res.status(500).json({ message: 'Server error' });
