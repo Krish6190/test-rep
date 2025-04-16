@@ -50,7 +50,11 @@ router.get('/latest', async (req, res) => {
        return res.status(404).json({ message: 'No image found' });
      }
  
-     res.json({ image_url: latestImage.imageUrl });
+     res.json({ 
+      image_url: latestImage.imageUrl,
+      timestamp: latestImage.timestamp 
+    }); 
+    
    } catch (error) {
      console.error('Error fetching latest image:', error);
      res.status(500).json({ message: 'Server error' });
