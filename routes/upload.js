@@ -62,16 +62,27 @@ router.get('/latest', async (req, res) => {
  });
 
  // Get all images (sorted newest first)
+ // Get the latest 15 images (sorted newest first)
 router.get('/all', async (req, res) => {
   try {
-    const images = await Image.find().sort({ timestamp: -1 });
-    res.json(images);
-    console.log(images);
+    const images = await Image.find()
+      .sort({ timestamp: -1 })
+      .limit(15);
+
+    // Send only the required fields
+    const simplifiedImages = images.map((img) => ({
+      imageUrl: img.imageUrl,
+      timestamp: img.timestamp
+    }));
+
+    res.json(simplifiedImages);
   } catch (error) {
-    console.error('Error fetching all images:', error);
+    console.error('Error fetching images:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 
 
 module.exports = router;
