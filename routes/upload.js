@@ -64,28 +64,30 @@ router.post('/', upload.single('image'), async (req, res) => {
 });
 
 // GET /upload/latest - Fetch the most recent image
+// GET /upload/latest - Return the most recent image
 router.get('/latest', async (req, res) => {
   try {
     const latestImage = await Image.findOne().sort({ timestamp: -1 });
     if (!latestImage) {
       return res.status(404).json({ message: 'No images found' });
     }
-    res.status(200).json(latestImage);
+    res.json(latestImage);
   } catch (err) {
-    console.error('❌ Error fetching latest image:', err);
+    console.error('❌ Fetch latest image error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// GET /upload/all - Fetch the 15 most recent images
+// GET /upload/all - Return the last 15 images sorted by newest first
 router.get('/all', async (req, res) => {
   try {
     const images = await Image.find().sort({ timestamp: -1 }).limit(15);
-    res.status(200).json(images);
+    res.json(images);
   } catch (err) {
-    console.error('❌ Error fetching images:', err);
+    console.error('❌ Fetch all images error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 module.exports = router;
