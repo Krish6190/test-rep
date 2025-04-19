@@ -2,15 +2,33 @@ require('dotenv').config();
 const admin = require('firebase-admin');
 const express = require('express');
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
 const uploadRoute = require('./routes/upload');
-const Token = require('./models/Token'); // NEW: FCM token model
+const Token = require('./models/Token');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
+app.use(cors()); // Enable CORS for mobile apps
+
+// Ensure 'uploads/' folder exists (for multer)
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
+});
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // MongoDB connection
@@ -50,3 +68,5 @@ const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+
