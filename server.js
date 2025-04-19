@@ -6,8 +6,6 @@ const uploadRoute = require('./routes/upload');
 const Token = require('./models/Token'); // NEW: FCM token model
 
 const app = express();
-
-// Middleware to handle JSON payload
 app.use(express.json());
 
 // Initialize Firebase Admin SDK
