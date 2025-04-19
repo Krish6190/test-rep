@@ -1,25 +1,15 @@
 const express = require('express');
+const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Image = require('../models/Image');
+const Token = require('../models/Token');
+const admin = require('firebase-admin');
 
-const router = express.Router();
-
-// Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// Multer + Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'uploads',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
-  },
+// Multer Setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
 
 const upload = multer({ storage });
@@ -29,60 +19,34 @@ router.post('/', upload.single('image'), async (req, res) => {
   try {
     const result = req.file.path;
 
-    const newImage = new Image({
-      imageUrl: result,
-    });
-
+    const newImage = new Image({ imageUrl: result });
     const savedImage = await newImage.save();
+
+    const tokenDocs = await Token.find({});
+    const deviceTokens = tokenDocs.map(doc => doc.token);
+
+    if (deviceTokens.length > 0) {
+      const message = {
+        notification: {
+          title: '📸 New Image Captured!',
+          body: 'A new image has been uploaded.',
+        },
+        tokens: deviceTokens,
+      };
+
+      try {
+        const response = await admin.messaging().sendMulticast(message);
+        console.log('📢 Notifications sent:', response);
+      } catch (err) {
+        console.error('❌ Notification error:', err);
+      }
+    }
+
     res.status(201).json(savedImage);
-  } catch (error) {
-    console.error('Upload error:', error);
+  } catch (err) {
+    console.error('❌ Upload error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
-router.get('/latest', async (req, res) => {
-   try {
-     const latestImage = await Image.findOne().sort({ timestamp: -1 });
- 
-     if (!latestImage) {
-       return res.status(404).json({ message: 'No image found' });
-     }
- 
-     res.json({ 
-      image_url: latestImage.imageUrl,
-      timestamp: latestImage.timestamp 
-    }); 
-    
-   } catch (error) {
-     console.error('Error fetching latest image:', error);
-     res.status(500).json({ message: 'Server error' });
-   }
- });
-
- // Get all images (sorted newest first)
- // Get the latest 15 images (sorted newest first)
-router.get('/all', async (req, res) => {
-  try {
-    const images = await Image.find()
-      .sort({ timestamp: -1 })
-      .limit(15);
-
-    // Send only the required fields
-    const simplifiedImages = images.map((img) => ({
-      imageUrl: img.imageUrl,
-      timestamp: img.timestamp
-    }));
-
-    res.json(simplifiedImages);
-  } catch (error) {
-    console.error('Error fetching images:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-
-
 
 module.exports = router;
