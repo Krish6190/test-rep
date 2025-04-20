@@ -8,10 +8,19 @@ const Image = require('../models/Image');
 const Token = require('../models/Token');
 const admin = require('firebase-admin');
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 // Multer Setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'uploads',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+  },
 });
 
 const upload = multer({ storage });
@@ -19,7 +28,7 @@ const upload = multer({ storage });
 // POST /upload
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const localPath = req.file.path;
+    const result = req.file.path;
 
     const newImage = new Image({
       imageUrl: result,
