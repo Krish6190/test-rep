@@ -42,19 +42,41 @@ router.post('/', upload.single('image'), async (req, res) => {
 });
 
 
+// GET /upload/latest - Get the latest uploaded image
 router.get('/latest', async (req, res) => {
-   try {
-     const latestImage = await Image.findOne().sort({ timestamp: -1 });
- 
-     if (!latestImage) {
-       return res.status(404).json({ message: 'No image found' });
-     }
- 
-     res.json({ image_url: latestImage.imageUrl });
-   } catch (error) {
-     console.error('Error fetching latest image:', error);
-     res.status(500).json({ message: 'Server error' });
-   }
- });
+  try {
+    const latestImage = await Image.findOne().sort({ timestamp: -1 });
+
+    if (!latestImage) {
+      return res.status(404).json({ message: 'No image found' });
+    }
+
+    res.json({ 
+      imageUrl: latestImage.imageUrl,
+      timestamp: latestImage.timestamp, 
+    });
+  } catch (error) {
+    console.error('Error fetching latest image:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+ // GET /upload/all - Endpoint to get all images
+router.get('/all', async (req, res) => {
+  try {
+    const images = await Image.find().sort({ timestamp: -1 }); // Sort by timestamp descending to get the latest images first
+
+    if (!images.length) {
+      return res.status(404).json({ message: 'No images found' });
+    }
+
+    res.json(images); // Send the array of images
+  } catch (error) {
+    console.error('Error fetching all images:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 module.exports = router;
