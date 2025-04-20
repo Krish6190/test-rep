@@ -5,6 +5,9 @@ const uploadRoute = require('./routes/upload');
 
 const app = express();
 
+// Middleware for parsing JSON bodies
+app.use(express.json());
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -14,7 +17,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch((err) => console.error('MongoDB error:', err));
 
 // Routes
-app.use('/upload', uploadRoute);
+app.use('/upload', uploadRoute); // Image upload and latest image routes
 
 // Server
 const PORT = process.env.PORT || 5000;

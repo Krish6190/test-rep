@@ -24,7 +24,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// POST /upload
+// POST /upload - Handle image upload
 router.post('/', upload.single('image'), async (req, res) => {
   try {
     const result = req.file.path;
@@ -41,20 +41,36 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-
+// GET /upload/latest - Fetch latest uploaded image
 router.get('/latest', async (req, res) => {
-   try {
-     const latestImage = await Image.findOne().sort({ timestamp: -1 });
- 
-     if (!latestImage) {
-       return res.status(404).json({ message: 'No image found' });
-     }
- 
-     res.json({ image_url: latestImage.imageUrl });
-   } catch (error) {
-     console.error('Error fetching latest image:', error);
-     res.status(500).json({ message: 'Server error' });
-   }
- });
+  try {
+    const latestImage = await Image.findOne().sort({ timestamp: -1 });
+
+    if (!latestImage) {
+      return res.status(404).json({ message: 'No image found' });
+    }
+
+    res.json({ image_url: latestImage.imageUrl });
+  } catch (error) {
+    console.error('Error fetching latest image:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /upload/all - Fetch 15 most recent images sorted by date
+router.get('/all', async (req, res) => {
+  try {
+    const images = await Image.find().sort({ timestamp: -1 }).limit(15);
+
+    if (images.length === 0) {
+      return res.status(404).json({ message: 'No images found' });
+    }
+
+    res.json(images);
+  } catch (error) {
+    console.error('Error fetching previous images:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
