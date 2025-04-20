@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Image = require('../models/Image');
 const Token = require('../models/Token');
 const admin = require('firebase-admin');
@@ -20,16 +21,8 @@ router.post('/', upload.single('image'), async (req, res) => {
   try {
     const localPath = req.file.path;
 
-    // Upload to Cloudinary
-    const cloudinaryResult = await cloudinary.uploader.upload(localPath, {
-      folder: 'security-images',
-    });
-
-    // Delete the local file after upload
-    fs.unlinkSync(localPath);
-
     const newImage = new Image({
-      imageUrl: cloudinaryResult.secure_url,
+      imageUrl: result,
       timestamp: new Date(),
     });
 
@@ -71,8 +64,8 @@ router.get('/latest', async (req, res) => {
     if (!latestImage) {
       return res.status(404).json({ message: 'No images found' });
     }
-    res.json(latestImage);
-  } catch (err) {
+    res.json({ image_url: latestImage.imageUrl });
+  } catch (error) {
     console.error('❌ Fetch latest image error:', err);
     res.status(500).json({ message: 'Server error' });
   }
