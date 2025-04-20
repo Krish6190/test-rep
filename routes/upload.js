@@ -49,7 +49,11 @@ router.post('/', upload.single('image'), async (req, res) => {
       }
     }
 
-    res.status(201).json(savedImage);
+    res.status(201).json({
+      message: 'Image uploaded successfully',
+      imageUrl: savedImage.imageUrl,
+      timestamp: savedImage.timestamp,
+    });
   } catch (err) {
     console.error('❌ Upload error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -64,8 +68,11 @@ router.get('/latest', async (req, res) => {
     if (!latestImage) {
       return res.status(404).json({ message: 'No images found' });
     }
-    res.json({ image_url: latestImage.imageUrl });
-  } catch (error) {
+    res.status(200).json({
+      imageUrl: latestImage.imageUrl,
+      timestamp: latestImage.timestamp,
+    });
+  } catch (err) {
     console.error('❌ Fetch latest image error:', err);
     res.status(500).json({ message: 'Server error' });
   }
@@ -75,12 +82,15 @@ router.get('/latest', async (req, res) => {
 router.get('/all', async (req, res) => {
   try {
     const images = await Image.find().sort({ timestamp: -1 }).limit(15);
-    res.json(images);
+    const imageData = images.map(img => ({
+      imageUrl: img.imageUrl,
+      timestamp: img.timestamp,
+    }));
+    res.status(200).json(imageData);
   } catch (err) {
     console.error('❌ Fetch all images error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 module.exports = router;
